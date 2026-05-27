@@ -1,0 +1,82 @@
+import { LayoutTemplate, X } from "lucide-react";
+import { ROOM_TEMPLATES } from "../constants/templates";
+import type { Room } from "../types";
+import { formatDimension } from "../utils/layout";
+
+interface TemplateDialogProps {
+  isOpen: boolean;
+  selectedTemplateId: string | null;
+  roomUnit: Room["unit"];
+  onClose: () => void;
+  onSelectTemplate: (templateId: string) => void;
+}
+
+export const TemplateDialog = ({
+  isOpen,
+  selectedTemplateId,
+  roomUnit,
+  onClose,
+  onSelectTemplate,
+}: TemplateDialogProps) => {
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleSelectTemplate = (templateId: string) => {
+    onSelectTemplate(templateId);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-ink-900/30 px-4 py-8 backdrop-blur-sm">
+      <div className="max-h-[calc(100vh-64px)] w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-paper">
+        <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">Template</p>
+            <h2 className="mt-1 text-lg font-semibold text-ink-900">기본 템플릿</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-ink-200 bg-white text-ink-700 transition hover:bg-ink-50"
+            aria-label="닫기"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="max-h-[calc(100vh-160px)] overflow-y-auto p-5">
+          <div className="grid gap-3 md:grid-cols-2">
+            {ROOM_TEMPLATES.map((template) => {
+              const selected = selectedTemplateId === template.id;
+
+              return (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => handleSelectTemplate(template.id)}
+                  className={`rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
+                    selected ? "border-accent-500 bg-accent-50" : "border-ink-200 bg-white hover:border-ink-300"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl bg-ink-100 text-ink-700">
+                        <LayoutTemplate className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <p className="font-semibold text-ink-900">{template.name}</p>
+                      <p className="mt-1 text-sm text-ink-500">{template.description}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-white px-2 py-1 text-xs font-medium text-ink-500">
+                      {formatDimension(template.room.width, roomUnit)} × {formatDimension(template.room.height, roomUnit)}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

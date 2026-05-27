@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { ROOM_TEMPLATES } from "../constants/templates";
+import { LayoutTemplate, Plus } from "lucide-react";
 import type { FurnitureType, LayoutRecord, Room, SpaceType, Unit, WindowSide } from "../types";
-import { formatDimension } from "../utils/layout";
 import { ObjectAddDialog } from "./ObjectAddDialog";
 import { SectionTitle } from "./SectionTitle";
+import { TemplateDialog } from "./TemplateDialog";
 
 interface LeftSidebarProps {
   room: Room;
@@ -43,6 +42,7 @@ export const LeftSidebar = ({
   onToggleSnap,
 }: LeftSidebarProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const roomWidthInput = room.unit === "m" ? Number((room.width / 100).toFixed(2)) : room.width;
   const roomHeightInput = room.unit === "m" ? Number((room.height / 100).toFixed(2)) : room.height;
   const roomStep = room.unit === "m" ? "0.1" : "10";
@@ -51,7 +51,17 @@ export const LeftSidebar = ({
   return (
     <aside className="space-y-5 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur">
       <section className="space-y-4">
-        <SectionTitle eyebrow="Room" title="방 크기 설정" description="수치를 바꾸면 평면도와 면적 계산이 바로 반영됩니다." />
+        <div className="flex items-start justify-between gap-3">
+          <SectionTitle eyebrow="Room" title="방 크기 설정" description="수치를 바꾸면 평면도와 면적 계산이 바로 반영됩니다." />
+          <button
+            type="button"
+            onClick={() => setIsTemplateDialogOpen(true)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 py-2 text-sm font-semibold text-ink-700 transition hover:bg-ink-50"
+          >
+            <LayoutTemplate className="h-4 w-4" aria-hidden="true" />
+            템플릿 보기
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="rounded-2xl border border-ink-200 bg-ink-50 px-3 py-3">
             <span className="text-xs font-medium text-ink-500">가로</span>
@@ -173,40 +183,19 @@ export const LeftSidebar = ({
       </section>
     ) : null}
 
-    <section className="space-y-4">
-      <SectionTitle eyebrow="Template" title="기본 템플릿" description="바로 시작할 수 있도록 자주 쓰는 방 크기를 준비했습니다." />
-      <div className="space-y-3">
-        {ROOM_TEMPLATES.map((template) => (
-          <button
-            key={template.id}
-            type="button"
-            onClick={() => onSelectTemplate(template.id)}
-            className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
-              selectedTemplateId === template.id
-                ? "border-accent-500 bg-accent-50"
-                : "border-ink-200 bg-white hover:border-ink-300 hover:bg-ink-50"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold text-ink-900">{template.name}</p>
-                <p className="mt-1 text-sm text-ink-500">{template.description}</p>
-              </div>
-              <span className="rounded-full bg-white px-2 py-1 text-xs font-medium text-ink-500">
-                {formatDimension(template.room.width, room.unit)} × {formatDimension(template.room.height, room.unit)}
-              </span>
-            </div>
-          </button>
-        ))}
-      </div>
-    </section>
-
       <ObjectAddDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onAddFurniture={onAddFurniture}
         onAddZone={onAddZone}
         onAddWindow={onAddWindow}
+      />
+      <TemplateDialog
+        isOpen={isTemplateDialogOpen}
+        selectedTemplateId={selectedTemplateId}
+        roomUnit={room.unit}
+        onClose={() => setIsTemplateDialogOpen(false)}
+        onSelectTemplate={onSelectTemplate}
       />
     </aside>
   );
