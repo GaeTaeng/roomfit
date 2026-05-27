@@ -328,6 +328,30 @@ export default function App() {
     }));
   };
 
+  const resizeFurniture = (id: string, patch: Pick<Furniture, "x" | "y" | "width" | "height">) => {
+    updatePreview((state) => ({
+      ...state,
+      furnitureList: state.furnitureList.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      selectedItem: { type: "furniture", id },
+    }));
+  };
+
+  const resizeZone = (id: string, patch: Pick<SpaceZone, "x" | "y" | "width" | "height">) => {
+    updatePreview((state) => ({
+      ...state,
+      zoneList: state.zoneList.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      selectedItem: { type: "space", id },
+    }));
+  };
+
+  const resizeWindow = (id: string, patch: Pick<WindowOpening, "offset" | "length">) => {
+    updatePreview((state) => ({
+      ...state,
+      windowList: state.windowList.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      selectedItem: { type: "window", id },
+    }));
+  };
+
   const applyTemplate = (templateId: string) => {
     const template = ROOM_TEMPLATES.find((item) => item.id === templateId);
 
@@ -494,6 +518,9 @@ export default function App() {
             onMoveFurniture={moveFurniture}
             onMoveZone={moveZone}
             onMoveWindow={moveWindow}
+            onResizeFurniture={resizeFurniture}
+            onResizeZone={resizeZone}
+            onResizeWindow={resizeWindow}
             onMoveEnd={finishPreview}
             onDuplicateSelected={duplicateSelectedItem}
             onDeleteSelected={deleteSelectedItem}

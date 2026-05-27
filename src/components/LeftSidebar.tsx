@@ -1,8 +1,9 @@
-import { FURNITURE_PRESETS } from "../constants/furniture";
-import { SPACE_PRESETS, WINDOW_PRESETS } from "../constants/spaces";
+import { useState } from "react";
+import { Plus } from "lucide-react";
 import { ROOM_TEMPLATES } from "../constants/templates";
-import type { LayoutRecord, Room, SpaceType, Unit, WindowSide } from "../types";
+import type { FurnitureType, LayoutRecord, Room, SpaceType, Unit, WindowSide } from "../types";
 import { formatDimension } from "../utils/layout";
+import { ObjectAddDialog } from "./ObjectAddDialog";
 import { SectionTitle } from "./SectionTitle";
 
 interface LeftSidebarProps {
@@ -13,7 +14,7 @@ interface LeftSidebarProps {
   snapEnabled: boolean;
   onRoomChange: (patch: Partial<Room>) => void;
   onSelectTemplate: (templateId: string) => void;
-  onAddFurniture: (type: (typeof FURNITURE_PRESETS)[number]["type"]) => void;
+  onAddFurniture: (type: FurnitureType) => void;
   onAddZone: (type: SpaceType) => void;
   onAddWindow: (side: WindowSide) => void;
   onLoadLayout: (layoutId: string) => void;
@@ -41,6 +42,7 @@ export const LeftSidebar = ({
   onDeleteLayout,
   onToggleSnap,
 }: LeftSidebarProps) => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const roomWidthInput = room.unit === "m" ? Number((room.width / 100).toFixed(2)) : room.width;
   const roomHeightInput = room.unit === "m" ? Number((room.height / 100).toFixed(2)) : room.height;
   const roomStep = room.unit === "m" ? "0.1" : "10";
@@ -107,6 +109,23 @@ export const LeftSidebar = ({
         >
           격자 스냅 {snapEnabled ? "켜짐" : "꺼짐"}
         </button>
+      </section>
+
+      <section className="rounded-[24px] border border-ink-200 bg-ink-50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-400">Add</p>
+            <h2 className="mt-1 text-base font-semibold text-ink-900">오브젝트</h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAddDialogOpen(true)}
+            className="inline-flex items-center gap-2 rounded-2xl bg-ink-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-ink-700"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            추가
+          </button>
+        </div>
       </section>
 
     {isLoadPanelOpen ? (
@@ -182,65 +201,13 @@ export const LeftSidebar = ({
       </div>
     </section>
 
-    <section className="space-y-4">
-      <SectionTitle eyebrow="Furniture" title="가구 추가" description="기본 가구를 클릭해 바로 방 안에 배치하세요." />
-      <div className="grid grid-cols-2 gap-3">
-        {FURNITURE_PRESETS.map((preset) => (
-          <button
-            key={preset.type}
-            type="button"
-            onClick={() => onAddFurniture(preset.type)}
-            className="rounded-2xl border border-ink-200 bg-white px-3 py-4 text-left transition hover:-translate-y-0.5 hover:border-ink-300 hover:shadow-md"
-          >
-            <div className="mb-3 h-3 w-14 rounded-full" style={{ backgroundColor: preset.color }} />
-            <p className="font-semibold text-ink-900">{preset.name}</p>
-            <p className="mt-1 text-xs text-ink-500">
-              {preset.width}×{preset.height}cm
-            </p>
-            <p className="mt-2 text-xs text-ink-400">{preset.hint}</p>
-          </button>
-        ))}
-      </div>
-    </section>
-
-      <section className="space-y-4">
-        <SectionTitle eyebrow="Zone" title="공간 분리" description="방 안에 베란다, 주방, 현관 같은 구역을 추가합니다." />
-        <div className="grid grid-cols-2 gap-3">
-          {SPACE_PRESETS.map((preset) => (
-            <button
-              key={preset.type}
-              type="button"
-              onClick={() => onAddZone(preset.type)}
-              className="rounded-2xl border border-ink-200 bg-white px-3 py-4 text-left transition hover:-translate-y-0.5 hover:border-ink-300 hover:shadow-md"
-            >
-              <div className="mb-3 h-10 rounded-xl border border-black/10" style={{ backgroundColor: preset.color }} />
-              <p className="font-semibold text-ink-900">{preset.name}</p>
-              <p className="mt-1 text-xs text-ink-500">
-                {preset.width}×{preset.height}cm
-              </p>
-              <p className="mt-2 text-xs text-ink-400">{preset.hint}</p>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <SectionTitle eyebrow="Window" title="창문 위치 설정" description="벽 방향별 창문을 추가하고 위치와 길이를 조정합니다." />
-        <div className="grid grid-cols-2 gap-3">
-          {WINDOW_PRESETS.map((preset) => (
-            <button
-              key={preset.side}
-              type="button"
-              onClick={() => onAddWindow(preset.side)}
-              className="rounded-2xl border border-ink-200 bg-white px-3 py-4 text-left transition hover:-translate-y-0.5 hover:border-ink-300 hover:shadow-md"
-            >
-              <div className="mb-3 h-3 rounded-full bg-[#69a7bf]" />
-              <p className="font-semibold text-ink-900">{preset.name}</p>
-              <p className="mt-1 text-xs text-ink-500">길이 {preset.length}cm</p>
-            </button>
-          ))}
-        </div>
-      </section>
+      <ObjectAddDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onAddFurniture={onAddFurniture}
+        onAddZone={onAddZone}
+        onAddWindow={onAddWindow}
+      />
     </aside>
   );
 };

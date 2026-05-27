@@ -31,6 +31,9 @@ interface RoomCanvasProps {
   onMoveFurniture: (id: string, position: Pick<Furniture, "x" | "y">) => void;
   onMoveZone: (id: string, position: Pick<SpaceZone, "x" | "y">) => void;
   onMoveWindow: (id: string, patch: Pick<WindowOpening, "offset">) => void;
+  onResizeFurniture: (id: string, patch: Pick<Furniture, "x" | "y" | "width" | "height">) => void;
+  onResizeZone: (id: string, patch: Pick<SpaceZone, "x" | "y" | "width" | "height">) => void;
+  onResizeWindow: (id: string, patch: Pick<WindowOpening, "offset" | "length">) => void;
   onMoveEnd: () => void;
   onDuplicateSelected: () => void;
   onDeleteSelected: () => void;
@@ -44,9 +47,29 @@ interface RoomCanvasProps {
 interface DragState {
   type: Selection["type"];
   id: string;
+  mode: "move" | "resize";
   offsetX: number;
   offsetY: number;
+  handle?: ResizeHandle;
+  startX?: number;
+  startY?: number;
+  startWidth?: number;
+  startHeight?: number;
+  startOffset?: number;
+  startLength?: number;
 }
+
+type ResizeHandle = "nw" | "ne" | "sw" | "se" | "start" | "end";
+
+const MIN_OBJECT_SIZE = 30;
+const MIN_WINDOW_LENGTH = 30;
+
+const cornerHandles: Array<{ key: ResizeHandle; className: string; cursor: string; label: string }> = [
+  { key: "nw", className: "-left-2 -top-2", cursor: "nwse-resize", label: "왼쪽 위 크기 조절" },
+  { key: "ne", className: "-right-2 -top-2", cursor: "nesw-resize", label: "오른쪽 위 크기 조절" },
+  { key: "sw", className: "-bottom-2 -left-2", cursor: "nesw-resize", label: "왼쪽 아래 크기 조절" },
+  { key: "se", className: "-bottom-2 -right-2", cursor: "nwse-resize", label: "오른쪽 아래 크기 조절" },
+];
 
 export const RoomCanvas = ({
   room,
@@ -61,6 +84,9 @@ export const RoomCanvas = ({
   onMoveFurniture,
   onMoveZone,
   onMoveWindow,
+  onResizeFurniture,
+  onResizeZone,
+  onResizeWindow,
   onMoveEnd,
   onDuplicateSelected,
   onDeleteSelected,
@@ -87,6 +113,96 @@ export const RoomCanvas = ({
   const hasSelection = selectedItem !== null;
   const canDuplicateSelection = selectedItem?.type === "furniture" || selectedItem?.type === "space";
   const isSelected = (type: Selection["type"], id: string) => selectedItem?.type === type && selectedItem.id === id;
+  const snapValue = useCallback(
+    (value: number) => (snapEnabled ? Math.round(value / GRID_SIZE_CM) * GRID_SIZE_CM : value),
+    [snapEnabled],
+  );
+
+  const getObjectResizePatch = useCallback(
+    (
+      pointerX: number,
+      pointerY: number,
+      state: DragState,
+      maxWidth: number,
+      maxHeight: number,
+    ): Pick<Furniture, "x" | "y" | "width" | "height"> | null => {
+      if (!state.handle || state.startX === undefined || state.startY === undefined || state.startWidth === undefined || state.startHeight === undefined) {
+        return null;
+      }
+
+      const startRight = state.startX + state.startWidth;
+      const startBottom = state.startY + state.startHeight;
+      let nextX = state.startX;
+      let nextY = state.startY;
+      let nextWidth = state.startWidth;
+      let nextHeight = state.startHeight;
+
+      if (state.handle.includes("e")) {
+        nextWidth = snapValue(pointerX - state.startX);
+      }
+
+      if (state.handle.includes("s")) {
+        nextHeight = snapValue(pointerY - state.startY);
+      }
+
+      if (state.handle.includes("w")) {
+        const snappedX = snapValue(pointerX);
+        nextX = clampWithinCanvas(snappedX, 0, startRight - MIN_OBJECT_SIZE);
+        nextWidth = startRight - nextX;
+      }
+
+      if (state.handle.includes("n")) {
+        const snappedY = snapValue(pointerY);
+        nextY = clampWithinCanvas(snappedY, 0, startBottom - MIN_OBJECT_SIZE);
+        nextHeight = startBottom - nextY;
+      }
+
+      nextWidth = clampWithinCanvas(nextWidth, MIN_OBJECT_SIZE, maxWidth - nextX);
+      nextHeight = clampWithinCanvas(nextHeight, MIN_OBJECT_SIZE, maxHeight - nextY);
+
+      return {
+        x: Math.round(nextX),
+        y: Math.round(nextY),
+        width: Math.round(nextWidth),
+        height: Math.round(nextHeight),
+      };
+    },
+    [snapValue],
+  );
+
+  const getWindowResizePatch = useCallback(
+    (
+      pointerX: number,
+      pointerY: number,
+      state: DragState,
+      activeWindow: EvaluatedWindowOpening,
+    ): Pick<WindowOpening, "offset" | "length"> | null => {
+      if (!state.handle || state.startOffset === undefined || state.startLength === undefined) {
+        return null;
+      }
+
+      const axisPointer = activeWindow.side === "top" || activeWindow.side === "bottom" ? pointerX : pointerY;
+      const wallLength = activeWindow.side === "top" || activeWindow.side === "bottom" ? room.width : room.height;
+      const startEnd = state.startOffset + state.startLength;
+
+      if (state.handle === "start") {
+        const nextOffset = clampWithinCanvas(snapValue(axisPointer), 0, startEnd - MIN_WINDOW_LENGTH);
+
+        return {
+          offset: Math.round(nextOffset),
+          length: Math.round(startEnd - nextOffset),
+        };
+      }
+
+      const nextLength = clampWithinCanvas(snapValue(axisPointer - state.startOffset), MIN_WINDOW_LENGTH, wallLength - state.startOffset);
+
+      return {
+        offset: Math.round(state.startOffset),
+        length: Math.round(nextLength),
+      };
+    },
+    [room.height, room.width, snapValue],
+  );
 
   const moveItem = useCallback(
     (clientX: number, clientY: number) => {
@@ -105,10 +221,20 @@ export const RoomCanvas = ({
           return;
         }
 
+        if (dragState.mode === "resize") {
+          const patch = getObjectResizePatch(pointerX, pointerY, dragState, room.width, room.height);
+
+          if (patch) {
+            onResizeFurniture(dragState.id, patch);
+          }
+
+          return;
+        }
+
         const nextX = pointerX - dragState.offsetX;
         const nextY = pointerY - dragState.offsetY;
-        const snappedX = snapEnabled ? Math.round(nextX / GRID_SIZE_CM) * GRID_SIZE_CM : nextX;
-        const snappedY = snapEnabled ? Math.round(nextY / GRID_SIZE_CM) * GRID_SIZE_CM : nextY;
+        const snappedX = snapValue(nextX);
+        const snappedY = snapValue(nextY);
 
         onMoveFurniture(dragState.id, {
           x: clampWithinCanvas(snappedX, -activeItem.width / 2, room.width - activeItem.width / 2),
@@ -123,10 +249,20 @@ export const RoomCanvas = ({
           return;
         }
 
+        if (dragState.mode === "resize") {
+          const patch = getObjectResizePatch(pointerX, pointerY, dragState, room.width, room.height);
+
+          if (patch) {
+            onResizeZone(dragState.id, patch);
+          }
+
+          return;
+        }
+
         const nextX = pointerX - dragState.offsetX;
         const nextY = pointerY - dragState.offsetY;
-        const snappedX = snapEnabled ? Math.round(nextX / GRID_SIZE_CM) * GRID_SIZE_CM : nextX;
-        const snappedY = snapEnabled ? Math.round(nextY / GRID_SIZE_CM) * GRID_SIZE_CM : nextY;
+        const snappedX = snapValue(nextX);
+        const snappedY = snapValue(nextY);
 
         onMoveZone(dragState.id, {
           x: clampWithinCanvas(snappedX, -activeZone.width / 2, room.width - activeZone.width / 2),
@@ -141,6 +277,16 @@ export const RoomCanvas = ({
           return;
         }
 
+        if (dragState.mode === "resize") {
+          const patch = getWindowResizePatch(pointerX, pointerY, dragState, activeWindow);
+
+          if (patch) {
+            onResizeWindow(dragState.id, patch);
+          }
+
+          return;
+        }
+
         const rawOffset =
           activeWindow.side === "top" || activeWindow.side === "bottom"
             ? pointerX - dragState.offsetX
@@ -149,7 +295,7 @@ export const RoomCanvas = ({
           activeWindow.side === "top" || activeWindow.side === "bottom"
             ? room.width - activeWindow.length
             : room.height - activeWindow.length;
-        const snappedOffset = snapEnabled ? Math.round(rawOffset / GRID_SIZE_CM) * GRID_SIZE_CM : rawOffset;
+        const snappedOffset = snapValue(rawOffset);
 
         onMoveWindow(dragState.id, {
           offset: clampWithinCanvas(snappedOffset, 0, Math.max(0, maxOffset)),
@@ -159,13 +305,18 @@ export const RoomCanvas = ({
     [
       dragState,
       furnitureList,
+      getObjectResizePatch,
+      getWindowResizePatch,
       onMoveFurniture,
+      onResizeFurniture,
+      onResizeWindow,
+      onResizeZone,
       onMoveWindow,
       onMoveZone,
       room.height,
       room.width,
       scale,
-      snapEnabled,
+      snapValue,
       windowList,
       zoneList,
     ],
@@ -325,10 +476,11 @@ export const RoomCanvas = ({
               const hasWarning = item.isOutOfBounds;
 
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  className={`absolute z-0 overflow-hidden border text-left transition ${
+                  role="button"
+                  tabIndex={0}
+                  className={`absolute z-0 border text-left transition ${
                     isSelected("space", item.id) ? "ring-4 ring-accent-300" : "ring-0"
                   } ${hasWarning ? "border-danger-500 bg-danger-100" : "border-dashed border-ink-300"}`}
                   style={{
@@ -350,6 +502,7 @@ export const RoomCanvas = ({
                     setDragState({
                       type: "space",
                       id: item.id,
+                      mode: "move",
                       offsetX: (event.clientX - event.currentTarget.getBoundingClientRect().left) / scale,
                       offsetY: (event.clientY - event.currentTarget.getBoundingClientRect().top) / scale,
                     });
@@ -360,7 +513,35 @@ export const RoomCanvas = ({
                   <span className="absolute left-3 top-3 rounded-full bg-white/85 px-2 py-1 text-[11px] font-semibold text-ink-700">
                     {item.name}
                   </span>
-                </button>
+                  {isSelected("space", item.id)
+                    ? cornerHandles.map((handle) => (
+                        <span
+                          key={handle.key}
+                          role="presentation"
+                          aria-label={handle.label}
+                          className={`absolute h-4 w-4 rounded-full border-2 border-white bg-ink-900 shadow-md ${handle.className}`}
+                          style={{ cursor: handle.cursor }}
+                          onPointerDown={(event) => {
+                            event.stopPropagation();
+                            onSelectItem({ type: "space", id: item.id });
+                            onMoveStart();
+                            setDragState({
+                              type: "space",
+                              id: item.id,
+                              mode: "resize",
+                              handle: handle.key,
+                              offsetX: 0,
+                              offsetY: 0,
+                              startX: item.x,
+                              startY: item.y,
+                              startWidth: item.width,
+                              startHeight: item.height,
+                            });
+                          }}
+                        />
+                      ))
+                    : null}
+                </div>
               );
             })}
 
@@ -369,9 +550,10 @@ export const RoomCanvas = ({
               const hasWarning = item.isOutOfBounds || item.isOverlapping;
 
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   className={`absolute z-10 rounded-[20px] transition ${
                     selected ? "ring-4 ring-accent-300" : "ring-0"
                   } ${hasWarning ? "shadow-[0_0_0_2px_rgba(201,79,79,0.8)]" : "shadow-[0_12px_26px_rgba(39,35,28,0.12)]"}`}
@@ -393,6 +575,7 @@ export const RoomCanvas = ({
                     setDragState({
                       type: "furniture",
                       id: item.id,
+                      mode: "move",
                       offsetX: (event.clientX - event.currentTarget.getBoundingClientRect().left) / scale,
                       offsetY: (event.clientY - event.currentTarget.getBoundingClientRect().top) / scale,
                     });
@@ -409,7 +592,35 @@ export const RoomCanvas = ({
                       90°
                     </div>
                   ) : null}
-                </button>
+                  {selected
+                    ? cornerHandles.map((handle) => (
+                        <span
+                          key={handle.key}
+                          role="presentation"
+                          aria-label={handle.label}
+                          className={`absolute h-4 w-4 rounded-full border-2 border-white bg-ink-900 shadow-md ${handle.className}`}
+                          style={{ cursor: handle.cursor }}
+                          onPointerDown={(event) => {
+                            event.stopPropagation();
+                            onSelectItem({ type: "furniture", id: item.id });
+                            onMoveStart();
+                            setDragState({
+                              type: "furniture",
+                              id: item.id,
+                              mode: "resize",
+                              handle: handle.key,
+                              offsetX: 0,
+                              offsetY: 0,
+                              startX: item.x,
+                              startY: item.y,
+                              startWidth: item.width,
+                              startHeight: item.height,
+                            });
+                          }}
+                        />
+                      ))
+                    : null}
+                </div>
               );
             })}
 
@@ -418,10 +629,11 @@ export const RoomCanvas = ({
               const vertical = item.side === "left" || item.side === "right";
 
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  className={`absolute z-20 overflow-hidden rounded-full border-2 bg-white text-[10px] font-semibold transition ${
+                  role="button"
+                  tabIndex={0}
+                  className={`absolute z-20 rounded-full border-2 bg-white text-[10px] font-semibold transition ${
                     isSelected("window", item.id)
                       ? "border-accent-500 ring-4 ring-accent-300"
                       : item.isOutOfBounds
@@ -446,6 +658,7 @@ export const RoomCanvas = ({
                     setDragState({
                       type: "window",
                       id: item.id,
+                      mode: "move",
                       offsetX: vertical ? 0 : (event.clientX - currentRect.left) / scale,
                       offsetY: vertical ? (event.clientY - currentRect.top) / scale : 0,
                     });
@@ -454,7 +667,59 @@ export const RoomCanvas = ({
                   draggable={false}
                 >
                   <span className={vertical ? "sr-only" : "block truncate px-2"}>{item.name}</span>
-                </button>
+                  {isSelected("window", item.id) ? (
+                    <>
+                      <span
+                        role="presentation"
+                        aria-label="창문 시작점 조절"
+                        className={`absolute rounded-full border-2 border-white bg-ink-900 shadow-md ${
+                          vertical ? "-top-2 left-1/2 h-4 w-4 -translate-x-1/2" : "left-0 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2"
+                        }`}
+                        style={{ cursor: vertical ? "ns-resize" : "ew-resize" }}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                          onSelectItem({ type: "window", id: item.id });
+                          onMoveStart();
+                          setDragState({
+                            type: "window",
+                            id: item.id,
+                            mode: "resize",
+                            handle: "start",
+                            offsetX: 0,
+                            offsetY: 0,
+                            startOffset: item.offset,
+                            startLength: item.length,
+                          });
+                        }}
+                      />
+                      <span
+                        role="presentation"
+                        aria-label="창문 끝점 조절"
+                        className={`absolute rounded-full border-2 border-white bg-ink-900 shadow-md ${
+                          vertical
+                            ? "-bottom-2 left-1/2 h-4 w-4 -translate-x-1/2"
+                            : "right-0 top-1/2 h-4 w-4 translate-x-1/2 -translate-y-1/2"
+                        }`}
+                        style={{ cursor: vertical ? "ns-resize" : "ew-resize" }}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                          onSelectItem({ type: "window", id: item.id });
+                          onMoveStart();
+                          setDragState({
+                            type: "window",
+                            id: item.id,
+                            mode: "resize",
+                            handle: "end",
+                            offsetX: 0,
+                            offsetY: 0,
+                            startOffset: item.offset,
+                            startLength: item.length,
+                          });
+                        }}
+                      />
+                    </>
+                  ) : null}
+                </div>
               );
             })}
           </div>
