@@ -48,6 +48,26 @@ const createInitialStateWithTemplate = (): EditorState => {
 
 const statesEqual = (left: EditorState, right: EditorState) => serializeEditorState(left) === serializeEditorState(right);
 
+const moveItemToEdge = <T extends { id: string }>(list: T[], id: string, direction: "front" | "back") => {
+  const currentIndex = list.findIndex((item) => item.id === id);
+
+  if (currentIndex < 0) {
+    return list;
+  }
+
+  const targetIndex = direction === "front" ? list.length - 1 : 0;
+
+  if (currentIndex === targetIndex) {
+    return list;
+  }
+
+  const nextList = [...list];
+  const [targetItem] = nextList.splice(currentIndex, 1);
+  nextList.splice(targetIndex, 0, targetItem);
+
+  return nextList;
+};
+
 export default function App() {
   const [history, setHistory] = useState<HistoryState>({
     past: [],
@@ -89,6 +109,28 @@ export default function App() {
     () => getSummary(editor.room, evaluatedFurniture, evaluatedZones, evaluatedWindows),
     [editor.room, evaluatedFurniture, evaluatedZones, evaluatedWindows],
   );
+  const selectedLayer = useMemo(() => {
+    if (!editor.selectedItem) {
+      return null;
+    }
+
+    const sourceList =
+      editor.selectedItem.type === "furniture"
+        ? editor.furnitureList
+        : editor.selectedItem.type === "space"
+          ? editor.zoneList
+          : editor.windowList;
+    const index = sourceList.findIndex((item) => item.id === editor.selectedItem?.id);
+
+    if (index < 0) {
+      return null;
+    }
+
+    return {
+      index: index + 1,
+      count: sourceList.length,
+    };
+  }, [editor.furnitureList, editor.selectedItem, editor.windowList, editor.zoneList]);
 
   const commit = (recipe: (state: EditorState) => EditorState) => {
     setHistory((previous) => {
@@ -282,6 +324,36 @@ export default function App() {
         selectedItem: { type: "space", id: nextZone.id },
       }));
     }
+  };
+
+  const moveSelectedItemToFront = () => {
+    if (!editor.selectedItem) {
+      return;
+    }
+
+    const { id, type } = editor.selectedItem;
+
+    commit((state) => ({
+      ...state,
+      furnitureList: type === "furniture" ? moveItemToEdge(state.furnitureList, id, "front") : state.furnitureList,
+      zoneList: type === "space" ? moveItemToEdge(state.zoneList, id, "front") : state.zoneList,
+      windowList: type === "window" ? moveItemToEdge(state.windowList, id, "front") : state.windowList,
+    }));
+  };
+
+  const moveSelectedItemToBack = () => {
+    if (!editor.selectedItem) {
+      return;
+    }
+
+    const { id, type } = editor.selectedItem;
+
+    commit((state) => ({
+      ...state,
+      furnitureList: type === "furniture" ? moveItemToEdge(state.furnitureList, id, "back") : state.furnitureList,
+      zoneList: type === "space" ? moveItemToEdge(state.zoneList, id, "back") : state.zoneList,
+      windowList: type === "window" ? moveItemToEdge(state.windowList, id, "back") : state.windowList,
+    }));
   };
 
   const rotateSelectedFurniture = () => {
@@ -536,11 +608,14 @@ export default function App() {
             selectedFurniture={selectedFurniture}
             selectedZone={selectedZone}
             selectedWindow={selectedWindow}
+            selectedLayer={selectedLayer}
             roomUnit={editor.room.unit}
             onUpdateFurniture={updateSelectedFurniture}
             onUpdateZone={updateSelectedZone}
             onUpdateWindow={updateSelectedWindow}
             onRotateFurniture={rotateSelectedFurniture}
+            onBringSelectedToFront={moveSelectedItemToFront}
+            onSendSelectedToBack={moveSelectedItemToBack}
             onDeleteSelected={deleteSelectedItem}
             onDuplicateSelected={duplicateSelectedItem}
           />

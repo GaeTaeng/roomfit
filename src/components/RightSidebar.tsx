@@ -1,3 +1,4 @@
+import { ChevronsDown, ChevronsUp } from "lucide-react";
 import type {
   EvaluatedFurniture,
   EvaluatedSpaceZone,
@@ -15,11 +16,14 @@ interface RightSidebarProps {
   selectedFurniture: EvaluatedFurniture | null;
   selectedZone: EvaluatedSpaceZone | null;
   selectedWindow: EvaluatedWindowOpening | null;
+  selectedLayer: { index: number; count: number } | null;
   roomUnit: "cm" | "m";
   onUpdateFurniture: (patch: Partial<EvaluatedFurniture>) => void;
   onUpdateZone: (patch: Partial<SpaceZone>) => void;
   onUpdateWindow: (patch: Partial<WindowOpening>) => void;
   onRotateFurniture: () => void;
+  onBringSelectedToFront: () => void;
+  onSendSelectedToBack: () => void;
   onDeleteSelected: () => void;
   onDuplicateSelected: () => void;
 }
@@ -36,11 +40,14 @@ export const RightSidebar = ({
   selectedFurniture,
   selectedZone,
   selectedWindow,
+  selectedLayer,
   roomUnit,
   onUpdateFurniture,
   onUpdateZone,
   onUpdateWindow,
   onRotateFurniture,
+  onBringSelectedToFront,
+  onSendSelectedToBack,
   onDeleteSelected,
   onDuplicateSelected,
 }: RightSidebarProps) => {
@@ -117,6 +124,12 @@ export const RightSidebar = ({
             <InfoBox label="회전 상태" value={`${selectedFurniture.rotation}°`} subValue="회전 시 가로/세로 값이 교체됩니다." />
           </div>
 
+          <LayerControls
+            selectedLayer={selectedLayer}
+            onBringSelectedToFront={onBringSelectedToFront}
+            onSendSelectedToBack={onSendSelectedToBack}
+          />
+
           <div className="grid grid-cols-2 gap-3">
             <button type="button" onClick={onRotateFurniture} className="rounded-2xl bg-ink-900 px-4 py-3 text-sm font-medium text-white">
               90° 회전
@@ -162,6 +175,12 @@ export const RightSidebar = ({
             <NumberField label="x 위치" value={selectedZone.x} onChange={(value) => onUpdateZone({ x: value })} />
             <NumberField label="y 위치" value={selectedZone.y} onChange={(value) => onUpdateZone({ y: value })} />
           </div>
+
+          <LayerControls
+            selectedLayer={selectedLayer}
+            onBringSelectedToFront={onBringSelectedToFront}
+            onSendSelectedToBack={onSendSelectedToBack}
+          />
 
           <button
             type="button"
@@ -217,6 +236,12 @@ export const RightSidebar = ({
             <NumberField label="창문 길이" value={selectedWindow.length} onChange={(value) => onUpdateWindow({ length: value })} />
           </div>
 
+          <LayerControls
+            selectedLayer={selectedLayer}
+            onBringSelectedToFront={onBringSelectedToFront}
+            onSendSelectedToBack={onSendSelectedToBack}
+          />
+
           <DeleteButton label="선택한 창문 삭제" onClick={onDeleteSelected} />
         </div>
       ) : null}
@@ -243,6 +268,50 @@ const InfoBox = ({ label, value, subValue }: InfoBoxProps) => (
     <p className="mt-1 text-xs text-ink-500">{subValue}</p>
   </div>
 );
+
+interface LayerControlsProps {
+  selectedLayer: { index: number; count: number } | null;
+  onBringSelectedToFront: () => void;
+  onSendSelectedToBack: () => void;
+}
+
+const LayerControls = ({ selectedLayer, onBringSelectedToFront, onSendSelectedToBack }: LayerControlsProps) => {
+  const canReorder = Boolean(selectedLayer && selectedLayer.count > 1);
+
+  return (
+    <div className="rounded-2xl border border-ink-200 bg-white px-4 py-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium text-ink-500">레이어 순서</p>
+          <p className="mt-2 text-sm font-semibold text-ink-900">
+            {selectedLayer ? `${selectedLayer.index} / ${selectedLayer.count}` : "-"}
+          </p>
+          <p className="mt-1 text-xs text-ink-500">숫자가 클수록 같은 종류 안에서 앞에 보입니다.</p>
+        </div>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={onSendSelectedToBack}
+          disabled={!canReorder}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-ink-200 bg-ink-50 px-4 py-3 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <ChevronsDown className="h-4 w-4" aria-hidden="true" />
+          맨뒤로
+        </button>
+        <button
+          type="button"
+          onClick={onBringSelectedToFront}
+          disabled={!canReorder}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-ink-900 px-4 py-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <ChevronsUp className="h-4 w-4" aria-hidden="true" />
+          맨앞으로
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface NumberFieldProps {
   label: string;
