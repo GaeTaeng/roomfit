@@ -2,6 +2,7 @@ import { LayoutTemplate, X } from "lucide-react";
 import { ROOM_TEMPLATES } from "../constants/templates";
 import type { Room } from "../types";
 import { formatDimension } from "../utils/layout";
+import { ModalShell } from "./ModalShell";
 
 interface TemplateDialogProps {
   isOpen: boolean;
@@ -28,8 +29,8 @@ export const TemplateDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-ink-900/30 px-4 py-8 backdrop-blur-sm">
-      <div className="max-h-[calc(100vh-64px)] w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-paper">
+    <ModalShell isOpen={isOpen} onClose={onClose} maxWidthClass="max-w-4xl">
+      <div>
         <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">Template</p>
@@ -45,7 +46,7 @@ export const TemplateDialog = ({
           </button>
         </div>
 
-        <div className="max-h-[calc(100vh-160px)] overflow-y-auto p-5">
+        <div className="max-h-[calc(100dvh-168px)] overflow-y-auto p-4 sm:p-5">
           <div className="grid gap-3 md:grid-cols-2">
             {ROOM_TEMPLATES.map((template) => {
               const selected = selectedTemplateId === template.id;
@@ -77,6 +78,6 @@ export const TemplateDialog = ({
           </div>
         </div>
       </div>
-    </div>
+    </ModalShell>
   );
 };

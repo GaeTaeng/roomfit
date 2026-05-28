@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type RefObject } from "react";
 
-export const useElementSize = <T extends HTMLElement>(element: T | null) => {
+export const useElementSize = <T extends HTMLElement>(elementRef: RefObject<T | null>) => {
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
+    const element = elementRef.current;
+
     if (!element) {
       return undefined;
     }
@@ -18,7 +20,7 @@ export const useElementSize = <T extends HTMLElement>(element: T | null) => {
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [element]);
+  }, [elementRef]);
 
   return size;
 };

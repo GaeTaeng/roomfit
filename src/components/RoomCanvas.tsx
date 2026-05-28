@@ -98,12 +98,12 @@ export const RoomCanvas = ({
 }: RoomCanvasProps) => {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const roomRef = useRef<HTMLDivElement | null>(null);
-  const stageSize = useElementSize(stageRef.current);
+  const stageSize = useElementSize(stageRef);
   const [dragState, setDragState] = useState<DragState | null>(null);
 
   const scale = useMemo(() => {
-    const availableWidth = Math.max(stageSize.width - 48, 360);
-    const availableHeight = Math.max(stageSize.height - 48, 360);
+    const availableWidth = Math.max(stageSize.width - 32, 240);
+    const availableHeight = Math.max(stageSize.height - 32, 260);
     const fitScale = Math.min(availableWidth / room.width, availableHeight / room.height);
     return Math.max(0.2, fitScale * zoom);
   }, [room.height, room.width, stageSize.height, stageSize.width, zoom]);
@@ -387,7 +387,7 @@ export const RoomCanvas = ({
   };
 
   return (
-    <section className="flex min-h-[780px] flex-col rounded-[32px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur">
+    <section className="flex min-h-[500px] flex-col rounded-[32px] border border-white/70 bg-white/80 p-4 shadow-paper backdrop-blur sm:min-h-[560px] sm:p-5 lg:min-h-[640px] xl:min-h-[720px]">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-ink-200 bg-ink-50 px-4 py-3">
         <div>
           <p className="text-sm font-semibold text-ink-900">2D 평면도</p>
@@ -400,37 +400,41 @@ export const RoomCanvas = ({
             type="button"
             onClick={onUndo}
             disabled={!canUndo}
+            aria-label="실행 취소"
             className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Undo2 className="h-4 w-4" aria-hidden="true" />
-            실행 취소
+            <span className="hidden sm:inline">실행 취소</span>
           </button>
           <button
             type="button"
             onClick={onRedo}
             disabled={!canRedo}
+            aria-label="다시 실행"
             className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Redo2 className="h-4 w-4" aria-hidden="true" />
-            다시 실행
+            <span className="hidden sm:inline">다시 실행</span>
           </button>
           <button
             type="button"
             onClick={onDuplicateSelected}
             disabled={!canDuplicateSelection}
+            aria-label="선택 항목 복사"
             className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
-            복사
+            <span className="hidden sm:inline">복사</span>
           </button>
           <button
             type="button"
             onClick={onDeleteSelected}
             disabled={!hasSelection}
+            aria-label="선택 항목 삭제"
             className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
-            삭제
+            <span className="hidden sm:inline">삭제</span>
           </button>
           <div className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-2 py-2">
             <button
@@ -454,7 +458,7 @@ export const RoomCanvas = ({
         </div>
       </div>
 
-      <div ref={stageRef} className="mt-5 flex-1 overflow-auto rounded-[28px] border border-ink-200 bg-[#f6f5f0] p-6">
+      <div ref={stageRef} className="mt-4 flex-1 overflow-auto rounded-[28px] border border-ink-200 bg-[#f6f5f0] p-3 sm:mt-5 sm:p-6">
         <div className="flex min-h-full min-w-full items-start justify-center">
           <div
             ref={roomRef}

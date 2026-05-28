@@ -49,7 +49,7 @@ export const LeftSidebar = ({
   const roomMin = room.unit === "m" ? "1" : "100";
 
   return (
-    <aside className="space-y-5 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur">
+    <aside className="space-y-5 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur xl:h-fit xl:self-start xl:sticky xl:top-5 xl:max-h-[calc(100dvh-40px)] xl:overflow-y-auto">
       <section className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <SectionTitle eyebrow="Room" title="방 크기 설정" description="수치를 바꾸면 평면도와 면적 계산이 바로 반영됩니다." />
@@ -138,50 +138,50 @@ export const LeftSidebar = ({
         </div>
       </section>
 
-    {isLoadPanelOpen ? (
-      <section className="space-y-4 rounded-3xl border border-ink-200 bg-ink-50 p-4">
-        <SectionTitle eyebrow="Saved" title="저장된 배치안" description="localStorage에 저장된 배치안을 다시 불러옵니다." />
-        {savedLayouts.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-ink-200 bg-white px-4 py-6 text-sm text-ink-500">
-            아직 저장된 배치안이 없습니다. 상단의 저장 버튼으로 첫 배치안을 만들어 보세요.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {savedLayouts.map((layout) => (
-              <div key={layout.id} className="rounded-2xl border border-white bg-white px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-ink-900">{layout.name}</p>
-                    <p className="mt-1 text-xs text-ink-500">
-                      {new Date(layout.updatedAt).toLocaleString("ko-KR")}
-                    </p>
+      {isLoadPanelOpen ? (
+        <section className="space-y-4 rounded-3xl border border-ink-200 bg-ink-50 p-4">
+          <SectionTitle eyebrow="Saved" title="저장된 배치안" description="localStorage에 저장된 배치안을 다시 불러옵니다." />
+          {savedLayouts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-ink-200 bg-white px-4 py-6 text-sm text-ink-500">
+              아직 저장된 배치안이 없습니다. 상단의 저장 버튼으로 첫 배치안을 만들어 보세요.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {savedLayouts.map((layout) => (
+                <div key={layout.id} className="rounded-2xl border border-white bg-white px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-ink-900">{layout.name}</p>
+                      <p className="mt-1 text-xs text-ink-500">
+                        {new Date(layout.updatedAt).toLocaleString("ko-KR")}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-ink-100 px-2 py-1 text-xs font-medium text-ink-500">
+                      {(layout.furnitureList ?? []).length + (layout.zoneList ?? []).length + (layout.windowList ?? []).length}개
+                    </span>
                   </div>
-                  <span className="rounded-full bg-ink-100 px-2 py-1 text-xs font-medium text-ink-500">
-                    {(layout.furnitureList ?? []).length + (layout.zoneList ?? []).length + (layout.windowList ?? []).length}개
-                  </span>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onLoadLayout(layout.id)}
+                      className="flex-1 rounded-xl bg-ink-900 px-3 py-2 text-sm font-medium text-white"
+                    >
+                      불러오기
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteLayout(layout.id)}
+                      className="rounded-xl border border-ink-200 px-3 py-2 text-sm font-medium text-ink-600"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onLoadLayout(layout.id)}
-                    className="flex-1 rounded-xl bg-ink-900 px-3 py-2 text-sm font-medium text-white"
-                  >
-                    불러오기
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteLayout(layout.id)}
-                    className="rounded-xl border border-ink-200 px-3 py-2 text-sm font-medium text-ink-600"
-                  >
-                    삭제
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-    ) : null}
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
 
       <ObjectAddDialog
         isOpen={isAddDialogOpen}

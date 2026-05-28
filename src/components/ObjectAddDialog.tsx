@@ -3,6 +3,7 @@ import { Armchair, Layers3, PanelTop, Plus, X } from "lucide-react";
 import { FURNITURE_PRESETS } from "../constants/furniture";
 import { SPACE_PRESETS, WINDOW_PRESETS } from "../constants/spaces";
 import type { FurnitureType, SpaceType, WindowSide } from "../types";
+import { ModalShell } from "./ModalShell";
 
 type AddTab = "furniture" | "space" | "window";
 
@@ -49,8 +50,8 @@ export const ObjectAddDialog = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-ink-900/30 px-4 py-8 backdrop-blur-sm">
-      <div className="max-h-[calc(100vh-64px)] w-full max-w-3xl overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-paper">
+    <ModalShell isOpen={isOpen} onClose={onClose}>
+      <div>
         <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-400">Add</p>
@@ -67,7 +68,7 @@ export const ObjectAddDialog = ({
         </div>
 
         <div className="border-b border-ink-100 px-5 py-3">
-          <div className="grid grid-cols-3 gap-2 rounded-2xl bg-ink-100 p-1">
+          <div className="grid grid-cols-1 gap-2 rounded-2xl bg-ink-100 p-1 sm:grid-cols-3">
             {tabs.map((tab) => {
               const Icon = tab.icon;
 
@@ -88,7 +89,7 @@ export const ObjectAddDialog = ({
           </div>
         </div>
 
-        <div className="max-h-[calc(100vh-220px)] overflow-y-auto p-5">
+        <div className="max-h-[calc(100dvh-228px)] overflow-y-auto p-4 sm:p-5">
           {activeTab === "furniture" ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {FURNITURE_PRESETS.map((preset) => (
@@ -136,7 +137,7 @@ export const ObjectAddDialog = ({
           ) : null}
         </div>
       </div>
-    </div>
+    </ModalShell>
   );
 };
 

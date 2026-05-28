@@ -477,7 +477,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-paper px-4 py-5 text-ink-900 lg:px-6">
+    <div className="min-h-screen bg-paper px-3 py-4 text-ink-900 sm:px-4 sm:py-5 lg:px-6">
       <div className="mx-auto flex max-w-[1800px] flex-col gap-5">
         <Header
           layoutName={editor.layoutName}
@@ -488,7 +488,7 @@ export default function App() {
           summary={summary}
         />
 
-        <main className="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
+        <main className="grid gap-5 xl:items-start xl:grid-cols-[300px_minmax(0,1fr)_300px] 2xl:grid-cols-[320px_minmax(0,1fr)_320px]">
           <LeftSidebar
             room={editor.room}
             selectedTemplateId={selectedTemplateId}

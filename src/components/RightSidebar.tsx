@@ -48,7 +48,7 @@ export const RightSidebar = ({
     selectedItem?.type === "space" ? "선택한 공간" : selectedItem?.type === "window" ? "선택한 창문" : "선택한 가구";
 
   return (
-    <aside className="space-y-5 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur">
+    <aside className="space-y-5 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur xl:h-fit xl:self-start xl:sticky xl:top-5 xl:max-h-[calc(100dvh-40px)] xl:overflow-y-auto">
       <SectionTitle
         eyebrow="Inspector"
         title={title}
