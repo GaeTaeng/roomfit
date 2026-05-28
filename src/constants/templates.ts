@@ -47,9 +47,9 @@ export const ROOM_TEMPLATES: Template[] = [
     starterWindows: [createWindowOpening("top", { offset: 72, length: 140, name: "큰 창문" })],
     starterFurniture: [
       createFurnitureItem("bed", { x: 24, y: 132 }),
-      createFurnitureItem("desk", { x: 252, y: 150 }),
-      createFurnitureItem("sofa", { x: 160, y: 40 }),
-      createFurnitureItem("wardrobe", { x: 250, y: 20 }),
+      createFurnitureItem("desk", { x: 210, y: 148 }),
+      createFurnitureItem("sofa", { x: 170, y: 258 }),
+      createFurnitureItem("wardrobe", { x: 248, y: 18 }),
     ],
   },
   {
@@ -70,7 +70,7 @@ export const ROOM_TEMPLATES: Template[] = [
       createFurnitureItem("bed", { x: 26, y: 160 }),
       createFurnitureItem("table", { x: 180, y: 240 }),
       createFurnitureItem("sofa", { x: 160, y: 70 }),
-      createFurnitureItem("tvStand", { x: 250, y: 510, width: 40, height: 140, rotation: 90 }),
+      createFurnitureItem("tvStand", { x: 356, y: 210, width: 40, height: 140, rotation: 90 }),
     ],
   },
   {

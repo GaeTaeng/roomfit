@@ -432,6 +432,7 @@ export default function App() {
     }
 
     setSelectedTemplateId(templateId);
+    setZoom(1);
     commit((state) => ({
       ...state,
       room: template.room,

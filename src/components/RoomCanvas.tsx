@@ -71,6 +71,9 @@ const cornerHandles: Array<{ key: ResizeHandle; className: string; cursor: strin
   { key: "se", className: "-bottom-2 -right-2", cursor: "nwse-resize", label: "오른쪽 아래 크기 조절" },
 ];
 
+const handleBaseClass =
+  "absolute rounded-full border-2 border-white bg-ink-900 shadow-md touch-none h-5 w-5 sm:h-4 sm:w-4";
+
 export const RoomCanvas = ({
   room,
   furnitureList,
@@ -484,7 +487,7 @@ export const RoomCanvas = ({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  className={`absolute z-0 border text-left transition ${
+                  className={`absolute z-0 touch-none border text-left transition ${
                     isSelected("space", item.id) ? "ring-4 ring-accent-300" : "ring-0"
                   } ${hasWarning ? "border-danger-500 bg-danger-100" : "border-dashed border-ink-300"}`}
                   style={{
@@ -523,7 +526,7 @@ export const RoomCanvas = ({
                           key={handle.key}
                           role="presentation"
                           aria-label={handle.label}
-                          className={`absolute h-4 w-4 rounded-full border-2 border-white bg-ink-900 shadow-md ${handle.className}`}
+                          className={`${handleBaseClass} ${handle.className}`}
                           style={{ cursor: handle.cursor }}
                           onPointerDown={(event) => {
                             event.stopPropagation();
@@ -558,7 +561,7 @@ export const RoomCanvas = ({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  className={`absolute z-10 rounded-[20px] transition ${
+                  className={`absolute z-10 touch-none rounded-[20px] transition ${
                     selected ? "ring-4 ring-accent-300" : "ring-0"
                   } ${hasWarning ? "shadow-[0_0_0_2px_rgba(201,79,79,0.8)]" : "shadow-[0_12px_26px_rgba(39,35,28,0.12)]"}`}
                   style={{
@@ -602,7 +605,7 @@ export const RoomCanvas = ({
                           key={handle.key}
                           role="presentation"
                           aria-label={handle.label}
-                          className={`absolute h-4 w-4 rounded-full border-2 border-white bg-ink-900 shadow-md ${handle.className}`}
+                          className={`${handleBaseClass} ${handle.className}`}
                           style={{ cursor: handle.cursor }}
                           onPointerDown={(event) => {
                             event.stopPropagation();
@@ -637,7 +640,7 @@ export const RoomCanvas = ({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  className={`absolute z-20 rounded-full border-2 bg-white text-[10px] font-semibold transition ${
+                  className={`absolute z-20 touch-none rounded-full border-2 bg-white text-[10px] font-semibold transition ${
                     isSelected("window", item.id)
                       ? "border-accent-500 ring-4 ring-accent-300"
                       : item.isOutOfBounds
@@ -676,8 +679,8 @@ export const RoomCanvas = ({
                       <span
                         role="presentation"
                         aria-label="창문 시작점 조절"
-                        className={`absolute rounded-full border-2 border-white bg-ink-900 shadow-md ${
-                          vertical ? "-top-2 left-1/2 h-4 w-4 -translate-x-1/2" : "left-0 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2"
+                        className={`${handleBaseClass} ${
+                          vertical ? "-top-2 left-1/2 -translate-x-1/2" : "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2"
                         }`}
                         style={{ cursor: vertical ? "ns-resize" : "ew-resize" }}
                         onPointerDown={(event) => {
@@ -699,10 +702,10 @@ export const RoomCanvas = ({
                       <span
                         role="presentation"
                         aria-label="창문 끝점 조절"
-                        className={`absolute rounded-full border-2 border-white bg-ink-900 shadow-md ${
+                        className={`${handleBaseClass} ${
                           vertical
-                            ? "-bottom-2 left-1/2 h-4 w-4 -translate-x-1/2"
-                            : "right-0 top-1/2 h-4 w-4 translate-x-1/2 -translate-y-1/2"
+                            ? "-bottom-2 left-1/2 -translate-x-1/2"
+                            : "right-0 top-1/2 translate-x-1/2 -translate-y-1/2"
                         }`}
                         style={{ cursor: vertical ? "ns-resize" : "ew-resize" }}
                         onPointerDown={(event) => {

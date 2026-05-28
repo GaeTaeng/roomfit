@@ -19,7 +19,7 @@ export const Header = ({
   summary,
 }: HeaderProps) => (
   <header className="rounded-[30px] border border-white/70 bg-white/80 px-4 py-4 shadow-paper backdrop-blur sm:px-6 sm:py-5">
-    <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-center 2xl:justify-between">
+    <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
       <div className="space-y-2">
         <div className="inline-flex items-center gap-3 rounded-full border border-ink-200 bg-ink-50 px-3 py-1 text-xs font-medium text-ink-500">
           <span className="h-2 w-2 rounded-full bg-accent-500" />
@@ -35,8 +35,8 @@ export const Header = ({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 2xl:min-w-[420px] 2xl:items-end">
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center 2xl:justify-end">
+      <div className="flex flex-col gap-3 xl:min-w-[420px] xl:items-end">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
           <label className="flex w-full items-center gap-2 rounded-2xl border border-ink-200 bg-ink-50 px-4 py-3 sm:min-w-[220px] sm:flex-1">
             <span className="text-xs font-medium uppercase tracking-[0.18em] text-ink-500">Layout</span>
             <input
@@ -74,7 +74,7 @@ export const Header = ({
         </div>
 
         <div
-          className={`w-full rounded-2xl px-4 py-3 text-sm font-medium 2xl:w-auto ${
+          className={`w-full rounded-2xl px-4 py-3 text-sm font-medium xl:w-auto ${
             summary.statusTone === "danger" ? "bg-danger-100 text-danger-500" : "bg-valid-100 text-valid-500"
           }`}
         >

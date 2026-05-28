@@ -18,7 +18,7 @@ const formatArea = (value: number, unit: Room["unit"]) => {
 };
 
 export const SummaryBar = ({ room, summary, furnitureCount, zoneCount, windowCount }: SummaryBarProps) => (
-  <section className="grid gap-4 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur sm:grid-cols-2 2xl:grid-cols-5">
+  <section className="grid gap-4 rounded-[28px] border border-white/70 bg-white/80 p-5 shadow-paper backdrop-blur sm:grid-cols-2 xl:grid-cols-5">
     <article className="rounded-2xl bg-ink-50 px-4 py-4">
       <p className="text-xs font-medium uppercase tracking-[0.16em] text-ink-400">Room</p>
       <p className="mt-2 text-lg font-semibold text-ink-900">
@@ -44,7 +44,7 @@ export const SummaryBar = ({ room, summary, furnitureCount, zoneCount, windowCou
     <article
       className={`rounded-2xl px-4 py-4 ${
         summary.statusTone === "danger" ? "bg-danger-100" : "bg-valid-100"
-      } sm:col-span-2 2xl:col-span-1`}
+      } sm:col-span-2 xl:col-span-1`}
     >
       <p className="text-xs font-medium uppercase tracking-[0.16em] text-ink-400">Status</p>
       <p className="mt-2 text-lg font-semibold text-ink-900">{summary.statusTone === "danger" ? "주의 필요" : "배치 안정"}</p>
