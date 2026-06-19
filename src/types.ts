@@ -95,6 +95,13 @@ export interface LayoutRecord {
   updatedAt: string;
 }
 
+export interface LayoutFilePayload {
+  format: "roomfit-layout";
+  version: 1;
+  exportedAt: string;
+  layout: LayoutRecord;
+}
+
 export interface Template {
   id: string;
   name: string;

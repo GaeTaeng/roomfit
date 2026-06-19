@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayoutTemplate, Plus } from "lucide-react";
+import { LayoutTemplate, Plus, Upload } from "lucide-react";
 import type { FurnitureType, LayoutRecord, Room, SpaceType, Unit, WindowSide } from "../types";
 import { ObjectAddDialog } from "./ObjectAddDialog";
 import { SectionTitle } from "./SectionTitle";
@@ -18,6 +18,7 @@ interface LeftSidebarProps {
   onAddWindow: (side: WindowSide) => void;
   onLoadLayout: (layoutId: string) => void;
   onDeleteLayout: (layoutId: string) => void;
+  onImportLayoutFile: () => void;
   onToggleSnap: () => void;
 }
 
@@ -39,6 +40,7 @@ export const LeftSidebar = ({
   onAddWindow,
   onLoadLayout,
   onDeleteLayout,
+  onImportLayoutFile,
   onToggleSnap,
 }: LeftSidebarProps) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -140,10 +142,18 @@ export const LeftSidebar = ({
 
       {isLoadPanelOpen ? (
         <section className="space-y-4 rounded-3xl border border-ink-200 bg-ink-50 p-4">
-          <SectionTitle eyebrow="Saved" title="저장된 배치안" description="localStorage에 저장된 배치안을 다시 불러옵니다." />
+          <SectionTitle eyebrow="Saved" title="저장된 배치안" description="localStorage 목록을 보거나 RoomFit JSON 파일을 바로 불러옵니다." />
+          <button
+            type="button"
+            onClick={onImportLayoutFile}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-200 bg-white px-4 py-3 text-sm font-semibold text-ink-700 transition hover:border-ink-300 hover:bg-ink-50"
+          >
+            <Upload className="h-4 w-4" aria-hidden="true" />
+            파일 불러오기
+          </button>
           {savedLayouts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-ink-200 bg-white px-4 py-6 text-sm text-ink-500">
-              아직 저장된 배치안이 없습니다. 상단의 저장 버튼으로 첫 배치안을 만들어 보세요.
+              아직 저장된 배치안이 없습니다. 상단의 저장 버튼이나 파일 저장으로 첫 배치안을 만들어 보세요.
             </div>
           ) : (
             <div className="space-y-3">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Header } from "./components/Header";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
@@ -7,7 +7,7 @@ import { SummaryBar } from "./components/SummaryBar";
 import { createFurnitureItem } from "./constants/furniture";
 import { createSpaceZone, createWindowOpening } from "./constants/spaces";
 import { ROOM_TEMPLATES } from "./constants/templates";
-import type { EditorState, Furniture, LayoutRecord, Room, Selection, SpaceZone, WindowOpening } from "./types";
+import type { EditorState, LayoutRecord, Room, Selection, Furniture, SpaceZone, WindowOpening } from "./types";
 import {
   createInitialEditorState,
   duplicateFurniture,
@@ -17,7 +17,15 @@ import {
   evaluateZones,
   getSummary,
 } from "./utils/layout";
-import { loadSavedLayouts, saveSavedLayouts, serializeEditorState } from "./utils/storage";
+import {
+  createLayoutRecord,
+  exportLayoutRecordToFile,
+  importLayoutRecordFromFile,
+  loadSavedLayouts,
+  saveSavedLayouts,
+  serializeEditorState,
+  upsertLayoutRecord,
+} from "./utils/storage";
 
 interface HistoryState {
   past: EditorState[];
@@ -69,6 +77,7 @@ const moveItemToEdge = <T extends { id: string }>(list: T[], id: string, directi
 };
 
 export default function App() {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [history, setHistory] = useState<HistoryState>({
     past: [],
     present: createInitialStateWithTemplate(),
@@ -445,25 +454,10 @@ export default function App() {
     }));
   };
 
-  const saveCurrentLayout = () => {
-    const trimmedName = editor.layoutName.trim() || `배치안 ${savedLayouts.length + 1}`;
-    const matchedLayout = savedLayouts.find((layout) => layout.id === editor.layoutId && layout.name === trimmedName);
-    const now = new Date().toISOString();
-
-    const nextLayout: LayoutRecord = {
-      id: matchedLayout?.id ?? `layout-${crypto.randomUUID()}`,
-      name: trimmedName,
-      room: editor.room,
-      furnitureList: editor.furnitureList,
-      zoneList: editor.zoneList,
-      windowList: editor.windowList,
-      createdAt: matchedLayout?.createdAt ?? now,
-      updatedAt: now,
-    };
-
-    const nextLayouts = matchedLayout
-      ? savedLayouts.map((layout) => (layout.id === matchedLayout.id ? nextLayout : layout))
-      : [nextLayout, ...savedLayouts];
+  const persistCurrentLayout = () => {
+    const matchedLayout = savedLayouts.find((layout) => layout.id === editor.layoutId) ?? null;
+    const nextLayout = createLayoutRecord(editor, `배치안 ${savedLayouts.length + 1}`, matchedLayout);
+    const nextLayouts = upsertLayoutRecord(savedLayouts, nextLayout);
 
     setSavedLayouts(nextLayouts);
     saveSavedLayouts(nextLayouts);
@@ -473,6 +467,53 @@ export default function App() {
       layoutId: nextLayout.id,
       layoutName: nextLayout.name,
     }));
+
+    return nextLayout;
+  };
+
+  const saveCurrentLayout = () => {
+    persistCurrentLayout();
+  };
+
+  const exportCurrentLayout = () => {
+    const nextLayout = persistCurrentLayout();
+    exportLayoutRecordToFile(nextLayout);
+  };
+
+  const openImportFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
+  const importLayoutFromFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const importedLayout = await importLayoutRecordFromFile(file);
+      const nextLayouts = upsertLayoutRecord(savedLayouts, importedLayout);
+
+      setSavedLayouts(nextLayouts);
+      saveSavedLayouts(nextLayouts);
+      replaceEntireState({
+        layoutId: importedLayout.id,
+        layoutName: importedLayout.name,
+        room: importedLayout.room,
+        furnitureList: importedLayout.furnitureList ?? [],
+        zoneList: importedLayout.zoneList ?? [],
+        windowList: importedLayout.windowList ?? [],
+        selectedItem: null,
+      });
+      setSelectedTemplateId(null);
+      setZoom(1);
+      setIsLoadPanelOpen(false);
+    } catch (error) {
+      console.error(error);
+      window.alert("RoomFit 배치 파일을 불러오지 못했습니다. RoomFit에서 내보낸 JSON 파일인지 확인해 주세요.");
+    }
   };
 
   const loadLayout = (layoutId: string) => {
@@ -556,6 +597,7 @@ export default function App() {
           layoutName={editor.layoutName}
           onLayoutNameChange={(value) => commit((state) => ({ ...state, layoutName: value }))}
           onSave={saveCurrentLayout}
+          onExportFile={exportCurrentLayout}
           onToggleLoadPanel={() => setIsLoadPanelOpen((value) => !value)}
           onReset={resetLayout}
           summary={summary}
@@ -575,6 +617,7 @@ export default function App() {
             onAddWindow={addWindow}
             onLoadLayout={loadLayout}
             onDeleteLayout={deleteLayout}
+            onImportLayoutFile={openImportFilePicker}
             onToggleSnap={() => setSnapEnabled((value) => !value)}
           />
 
@@ -628,6 +671,13 @@ export default function App() {
           furnitureCount={editor.furnitureList.length}
           zoneCount={editor.zoneList.length}
           windowCount={editor.windowList.length}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          className="hidden"
+          onChange={importLayoutFromFile}
         />
       </div>
     </div>

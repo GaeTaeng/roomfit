@@ -1,10 +1,11 @@
-import { FolderOpen, RotateCcw, Save } from "lucide-react";
+import { Download, FolderOpen, RotateCcw, Save } from "lucide-react";
 import type { LayoutSummary } from "../types";
 
 interface HeaderProps {
   layoutName: string;
   onLayoutNameChange: (value: string) => void;
   onSave: () => void;
+  onExportFile: () => void;
   onToggleLoadPanel: () => void;
   onReset: () => void;
   summary: LayoutSummary;
@@ -14,6 +15,7 @@ export const Header = ({
   layoutName,
   onLayoutNameChange,
   onSave,
+  onExportFile,
   onToggleLoadPanel,
   onReset,
   summary,
@@ -54,6 +56,14 @@ export const Header = ({
           >
             <Save className="h-4 w-4" aria-hidden="true" />
             저장
+          </button>
+          <button
+            type="button"
+            onClick={onExportFile}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-200 bg-white px-4 py-3 text-sm font-medium text-ink-700 transition hover:border-ink-300 hover:bg-ink-50 sm:w-auto"
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            파일 저장
           </button>
           <button
             type="button"
