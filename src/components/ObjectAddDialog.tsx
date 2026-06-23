@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from "react";
-import { Armchair, Layers3, PanelTop, Plus, X } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { Armchair, Layers3, PanelTop, Plus, Search, X } from "lucide-react";
 import { FURNITURE_PRESETS } from "../constants/furniture";
 import { SPACE_PRESETS, WINDOW_PRESETS } from "../constants/spaces";
 import type { FurnitureType, SpaceType, WindowSide } from "../types";
@@ -30,6 +30,7 @@ export const ObjectAddDialog = ({
   onAddWindow,
 }: ObjectAddDialogProps) => {
   const [activeTab, setActiveTab] = useState<AddTab>("furniture");
+  const [furnitureQuery, setFurnitureQuery] = useState("");
 
   if (!isOpen) {
     return null;
@@ -54,6 +55,22 @@ export const ObjectAddDialog = ({
     width: Math.min(116, Math.max(40, width * 0.42)),
     height: Math.min(78, Math.max(30, height * 0.24)),
   });
+
+  const filteredFurniturePresets = useMemo(() => {
+    const normalizedQuery = furnitureQuery.replace(/\s+/g, "").trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return FURNITURE_PRESETS;
+    }
+
+    return FURNITURE_PRESETS.filter((preset) =>
+      [preset.name, preset.type, preset.hint, ...(preset.keywords ?? [])]
+        .join(" ")
+        .replace(/\s+/g, "")
+        .toLowerCase()
+        .includes(normalizedQuery),
+    );
+  }, [furnitureQuery]);
 
   return (
     <ModalShell isOpen={isOpen} onClose={onClose}>
@@ -99,31 +116,54 @@ export const ObjectAddDialog = ({
 
         <div className="max-h-[calc(100dvh-228px)] overflow-y-auto p-4 sm:p-5">
           {activeTab === "furniture" ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {FURNITURE_PRESETS.map((preset) => (
-                <PresetButton
-                  key={preset.type}
-                  name={preset.name}
-                  meta={`${preset.width}×${preset.height}cm`}
-                  hint={preset.hint}
-                  color={preset.color}
-                  preview={
-                    <div className="mb-4 flex h-24 items-center rounded-2xl bg-ink-50 px-3 dark:bg-white/5">
-                      <div
-                        className="overflow-hidden rounded-[20px] shadow-[0_10px_22px_rgba(39,35,28,0.12)]"
-                        style={{
-                          width: `${getPreviewSize(preset.width, preset.height).width}px`,
-                          height: `${getPreviewSize(preset.width, preset.height).height}px`,
-                          backgroundColor: preset.color,
-                        }}
-                      >
-                        <FurnitureShape type={preset.type} name={preset.name} compact />
-                      </div>
-                    </div>
-                  }
-                  onClick={() => handleAddFurniture(preset.type)}
-                />
-              ))}
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <label className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/5 sm:min-w-[280px] sm:flex-1">
+                  <Search className="h-4 w-4 shrink-0 text-ink-400 dark:text-[#9e9789]" aria-hidden="true" />
+                  <input
+                    value={furnitureQuery}
+                    onChange={(event) => setFurnitureQuery(event.target.value)}
+                    placeholder="가구 이름, 별칭, 용도로 검색"
+                    className="w-full bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400 dark:text-[#f4f0e7] dark:placeholder:text-[#7f786b]"
+                  />
+                </label>
+                <div className="rounded-full bg-ink-100 px-3 py-2 text-xs font-semibold text-ink-500 dark:bg-white/10 dark:text-[#d3ccbe]">
+                  {filteredFurniturePresets.length}개 표시
+                </div>
+              </div>
+
+              {filteredFurniturePresets.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredFurniturePresets.map((preset) => (
+                    <PresetButton
+                      key={preset.type}
+                      name={preset.name}
+                      meta={`${preset.width}×${preset.height}cm`}
+                      hint={preset.hint}
+                      color={preset.color}
+                      preview={
+                        <div className="mb-4 flex h-24 items-center rounded-2xl bg-ink-50 px-3 dark:bg-white/5">
+                          <div
+                            className="overflow-hidden rounded-[20px] shadow-[0_10px_22px_rgba(39,35,28,0.12)]"
+                            style={{
+                              width: `${getPreviewSize(preset.width, preset.height).width}px`,
+                              height: `${getPreviewSize(preset.width, preset.height).height}px`,
+                              backgroundColor: preset.color,
+                            }}
+                          >
+                            <FurnitureShape type={preset.type} name={preset.name} compact />
+                          </div>
+                        </div>
+                      }
+                      onClick={() => handleAddFurniture(preset.type)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-dashed border-ink-200 bg-ink-50 px-5 py-8 text-sm text-ink-500 dark:border-white/10 dark:bg-white/5 dark:text-[#b9b1a3]">
+                  검색 결과가 없습니다. 다른 이름이나 별칭으로 다시 찾아보세요.
+                </div>
+              )}
             </div>
           ) : null}
 

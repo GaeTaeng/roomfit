@@ -63,8 +63,16 @@ const resolveVisualType = (type: FurnitureType, name: string): VisualType => {
     return "wardrobe";
   }
 
+  if (normalized.includes("책장") || normalized.includes("북쉘프")) {
+    return "bookshelf";
+  }
+
   if (normalized.includes("행거")) {
     return "hanger";
+  }
+
+  if (normalized.includes("협탁")) {
+    return "sideTable";
   }
 
   if (normalized.includes("서랍")) {
@@ -73,6 +81,14 @@ const resolveVisualType = (type: FurnitureType, name: string): VisualType => {
 
   if (normalized.includes("수납")) {
     return "storage";
+  }
+
+  if (normalized.includes("티테이블") || normalized.includes("커피테이블")) {
+    return "coffeeTable";
+  }
+
+  if (normalized.includes("화장대")) {
+    return "vanity";
   }
 
   if (normalized.includes("거울")) {
@@ -89,6 +105,22 @@ const resolveVisualType = (type: FurnitureType, name: string): VisualType => {
 
   if (normalized.includes("화장품")) {
     return "cosmetics";
+  }
+
+  if (normalized.includes("전자레인지") || normalized.includes("전자렌지") || normalized.includes("레인지")) {
+    return "microwave";
+  }
+
+  if (normalized.includes("공기청정기")) {
+    return "airPurifier";
+  }
+
+  if (normalized.includes("스탠드") || normalized.includes("조명") || normalized.includes("램프")) {
+    return "floorLamp";
+  }
+
+  if (normalized.includes("건조대")) {
+    return "dryingRack";
   }
 
   return "custom";
@@ -156,6 +188,19 @@ export const FurnitureShape = ({ type, name, compact = false }: FurnitureShapePr
     );
   }
 
+  if (visualType === "bookshelf") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute inset-x-[18%] top-[18%] h-px bg-black/12" />
+        <div className="absolute inset-x-[18%] top-[40%] h-px bg-black/12" />
+        <div className="absolute inset-x-[18%] top-[62%] h-px bg-black/12" />
+        <div className="absolute left-[34%] top-[18%] bottom-[16%] w-px bg-black/10" />
+        <div className="absolute right-[34%] top-[18%] bottom-[16%] w-px bg-black/10" />
+        {label}
+      </div>
+    );
+  }
+
   if (visualType === "wardrobe" || visualType === "storage" || visualType === "dresser") {
     return (
       <div className={frameClass}>
@@ -173,6 +218,19 @@ export const FurnitureShape = ({ type, name, compact = false }: FurnitureShapePr
     );
   }
 
+  if (visualType === "sideTable") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute inset-x-[16%] top-[18%] h-[12%] rounded-full bg-black/12" />
+        <div className="absolute inset-x-[20%] top-[34%] h-[24%] rounded-[10px] border border-black/10 bg-white/18" />
+        <div className="absolute inset-x-[22%] top-[46%] h-px bg-black/10" />
+        <div className={`absolute bottom-[14%] left-[24%] h-[18%] w-[7%] ${lineClass}`} />
+        <div className={`absolute bottom-[14%] right-[24%] h-[18%] w-[7%] ${lineClass}`} />
+        {label}
+      </div>
+    );
+  }
+
   if (visualType === "tvStand") {
     return (
       <div className={frameClass}>
@@ -185,12 +243,50 @@ export const FurnitureShape = ({ type, name, compact = false }: FurnitureShapePr
     );
   }
 
+  if (visualType === "coffeeTable") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute inset-x-[12%] top-[28%] h-[18%] rounded-full bg-black/12" />
+        <div className={`absolute bottom-[18%] left-[22%] h-[16%] w-[8%] ${lineClass}`} />
+        <div className={`absolute bottom-[18%] right-[22%] h-[16%] w-[8%] ${lineClass}`} />
+        <div className="absolute inset-x-[24%] bottom-[14%] h-[6%] rounded-full bg-black/10" />
+        {label}
+      </div>
+    );
+  }
+
+  if (visualType === "vanity") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute left-1/2 top-[12%] h-[32%] w-[38%] -translate-x-1/2 rounded-[14px] border border-black/10 bg-white/45" />
+        <div className="absolute inset-x-[14%] bottom-[18%] top-[54%] rounded-[12px] border border-black/10 bg-white/18" />
+        <div className="absolute inset-x-[18%] top-[68%] h-px bg-black/10" />
+        <div className="absolute left-[28%] bottom-[24%] h-[8%] w-[3%] rounded-full bg-black/12" />
+        <div className="absolute right-[28%] bottom-[24%] h-[8%] w-[3%] rounded-full bg-black/12" />
+        {label}
+      </div>
+    );
+  }
+
   if (visualType === "tv") {
     return (
       <div className={frameClass}>
         <div className="absolute inset-x-[10%] top-[16%] h-[42%] rounded-[12px] border border-black/10 bg-slate-900/20" />
         <div className="absolute left-1/2 top-[60%] h-[8%] w-[12%] -translate-x-1/2 rounded-full bg-black/14" />
         <div className="absolute bottom-[16%] left-1/2 h-[7%] w-[40%] -translate-x-1/2 rounded-full bg-black/12" />
+        {label}
+      </div>
+    );
+  }
+
+  if (visualType === "microwave") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute inset-y-[20%] left-[14%] right-[28%] rounded-[12px] border border-black/10 bg-slate-900/14" />
+        <div className="absolute inset-y-[18%] right-[12%] w-[12%] rounded-[10px] bg-white/26" />
+        <div className="absolute right-[16%] top-[28%] h-[6%] w-[4%] rounded-full bg-black/12" />
+        <div className="absolute right-[16%] top-[42%] h-[6%] w-[4%] rounded-full bg-black/12" />
+        <div className="absolute right-[16%] top-[56%] h-[6%] w-[4%] rounded-full bg-black/12" />
         {label}
       </div>
     );
@@ -231,12 +327,51 @@ export const FurnitureShape = ({ type, name, compact = false }: FurnitureShapePr
     );
   }
 
+  if (visualType === "airPurifier") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute inset-x-[24%] top-[12%] bottom-[12%] rounded-[16px] border border-black/10 bg-white/24" />
+        <div className="absolute inset-x-[32%] top-[22%] h-[8%] rounded-full bg-black/12" />
+        <div className="absolute inset-x-[30%] top-[42%] h-[4%] rounded-full bg-black/10" />
+        <div className="absolute inset-x-[30%] top-[52%] h-[4%] rounded-full bg-black/10" />
+        <div className="absolute inset-x-[30%] top-[62%] h-[4%] rounded-full bg-black/10" />
+        {label}
+      </div>
+    );
+  }
+
   if (visualType === "robotVacuum") {
     return (
       <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-full border border-black/10">
         <div className="absolute inset-[18%] rounded-full border-[5px] border-black/12 bg-white/25" />
         <div className="absolute left-[34%] top-[24%] h-[10%] w-[32%] rounded-full bg-black/12" />
         <div className="absolute inset-[34%] rounded-full bg-black/8" />
+        {label}
+      </div>
+    );
+  }
+
+  if (visualType === "floorLamp") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute left-1/2 top-[18%] h-[18%] w-[28%] -translate-x-1/2 rounded-t-[14px] rounded-b-[8px] bg-white/42" />
+        <div className="absolute left-1/2 top-[36%] bottom-[22%] w-[4%] -translate-x-1/2 rounded-full bg-black/12" />
+        <div className="absolute left-1/2 bottom-[16%] h-[6%] w-[34%] -translate-x-1/2 rounded-full bg-black/10" />
+        {label}
+      </div>
+    );
+  }
+
+  if (visualType === "dryingRack") {
+    return (
+      <div className={frameClass}>
+        <div className="absolute inset-x-[18%] top-[24%] h-px bg-black/12" />
+        <div className="absolute inset-x-[18%] top-[34%] h-px bg-black/12" />
+        <div className="absolute left-[24%] top-[24%] h-[46%] w-px rotate-[22deg] bg-black/12" />
+        <div className="absolute left-[40%] top-[24%] h-[46%] w-px rotate-[-22deg] bg-black/12" />
+        <div className="absolute right-[40%] top-[24%] h-[46%] w-px rotate-[22deg] bg-black/12" />
+        <div className="absolute right-[24%] top-[24%] h-[46%] w-px rotate-[-22deg] bg-black/12" />
+        <div className="absolute inset-x-[24%] bottom-[18%] h-[5%] rounded-full bg-black/10" />
         {label}
       </div>
     );
