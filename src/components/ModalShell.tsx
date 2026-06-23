@@ -50,7 +50,7 @@ export const ModalShell = ({ isOpen, onClose, children, maxWidthClass = "max-w-3
       }}
     >
       <div
-        className={`max-h-[calc(100dvh-32px)] w-full ${maxWidthClass} overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-paper sm:max-h-[calc(100dvh-64px)]`}
+        className={`max-h-[calc(100dvh-32px)] w-full ${maxWidthClass} overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-paper dark:border-white/10 dark:bg-[#171613] dark:shadow-none sm:max-h-[calc(100dvh-64px)]`}
         onMouseDown={(event) => event.stopPropagation()}
       >
         {children}

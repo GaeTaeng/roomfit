@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Header } from "./components/Header";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { RightSidebar } from "./components/RightSidebar";
@@ -35,6 +35,9 @@ interface HistoryState {
 }
 
 const DEFAULT_TEMPLATE_ID = "studio-5";
+const THEME_STORAGE_KEY = "roomfit-theme";
+
+type Theme = "light" | "dark";
 
 const createInitialStateWithTemplate = (): EditorState => {
   const base = createInitialEditorState();
@@ -55,6 +58,20 @@ const createInitialStateWithTemplate = (): EditorState => {
 };
 
 const statesEqual = (left: EditorState, right: EditorState) => serializeEditorState(left) === serializeEditorState(right);
+
+const getInitialTheme = (): Theme => {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
 
 const moveItemToEdge = <T extends { id: string }>(list: T[], id: string, direction: "front" | "back") => {
   const currentIndex = list.findIndex((item) => item.id === id);
@@ -78,6 +95,7 @@ const moveItemToEdge = <T extends { id: string }>(list: T[], id: string, directi
 
 export default function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
   const [history, setHistory] = useState<HistoryState>({
     past: [],
     present: createInitialStateWithTemplate(),
@@ -140,6 +158,13 @@ export default function App() {
       count: sourceList.length,
     };
   }, [editor.furnitureList, editor.selectedItem, editor.windowList, editor.zoneList]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   const commit = (recipe: (state: EditorState) => EditorState) => {
     setHistory((previous) => {
@@ -591,14 +616,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-paper px-3 py-4 text-ink-900 sm:px-4 sm:py-5 lg:px-6">
+    <div className="min-h-screen bg-paper px-3 py-4 text-ink-900 transition-colors duration-300 dark:bg-[#11100e] dark:text-[#f4f0e7] sm:px-4 sm:py-5 lg:px-6">
       <div className="mx-auto flex max-w-[1800px] flex-col gap-5">
         <Header
           layoutName={editor.layoutName}
+          theme={theme}
           onLayoutNameChange={(value) => commit((state) => ({ ...state, layoutName: value }))}
           onSave={saveCurrentLayout}
           onExportFile={exportCurrentLayout}
           onToggleLoadPanel={() => setIsLoadPanelOpen((value) => !value)}
+          onToggleTheme={() => setTheme((currentTheme) => (currentTheme === "light" ? "dark" : "light"))}
           onReset={resetLayout}
           summary={summary}
         />
@@ -637,6 +664,7 @@ export default function App() {
             onResizeFurniture={resizeFurniture}
             onResizeZone={resizeZone}
             onResizeWindow={resizeWindow}
+            onRotateFurniture={rotateSelectedFurniture}
             onMoveEnd={finishPreview}
             onDuplicateSelected={duplicateSelectedItem}
             onDeleteSelected={deleteSelectedItem}

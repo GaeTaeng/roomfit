@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Copy, Redo2, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { Copy, Redo2, RotateCw, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
 import { GRID_SIZE_CM } from "../constants/furniture";
 import { useElementSize } from "../hooks/useElementSize";
 import type {
@@ -34,6 +34,7 @@ interface RoomCanvasProps {
   onResizeFurniture: (id: string, patch: Pick<Furniture, "x" | "y" | "width" | "height">) => void;
   onResizeZone: (id: string, patch: Pick<SpaceZone, "x" | "y" | "width" | "height">) => void;
   onResizeWindow: (id: string, patch: Pick<WindowOpening, "offset" | "length">) => void;
+  onRotateFurniture: () => void;
   onMoveEnd: () => void;
   onDuplicateSelected: () => void;
   onDeleteSelected: () => void;
@@ -90,6 +91,7 @@ export const RoomCanvas = ({
   onResizeFurniture,
   onResizeZone,
   onResizeWindow,
+  onRotateFurniture,
   onMoveEnd,
   onDuplicateSelected,
   onDeleteSelected,
@@ -390,11 +392,11 @@ export const RoomCanvas = ({
   };
 
   return (
-    <section className="flex min-h-[500px] flex-col rounded-[32px] border border-white/70 bg-white/80 p-4 shadow-paper backdrop-blur sm:min-h-[560px] sm:p-5 lg:min-h-[640px] xl:min-h-[720px]">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-ink-200 bg-ink-50 px-4 py-3">
+    <section className="flex min-h-[500px] flex-col rounded-[32px] border border-white/70 bg-white/80 p-4 shadow-paper backdrop-blur transition-colors duration-300 dark:border-white/10 dark:bg-[#191815] dark:shadow-none sm:min-h-[560px] sm:p-5 lg:min-h-[640px] xl:min-h-[720px]">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-ink-200 bg-ink-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
         <div>
-          <p className="text-sm font-semibold text-ink-900">2D 평면도</p>
-          <p className="text-xs text-ink-500">
+          <p className="text-sm font-semibold text-ink-900 dark:text-[#f4f0e7]">2D 평면도</p>
+          <p className="text-xs text-ink-500 dark:text-[#b9b1a3]">
             가구를 드래그해서 배치하고, 겹치거나 방을 벗어나면 붉은 테두리로 경고합니다.
           </p>
         </div>
@@ -404,7 +406,7 @@ export const RoomCanvas = ({
             onClick={onUndo}
             disabled={!canUndo}
             aria-label="실행 취소"
-            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-white/5 dark:text-[#ebe4d6]"
           >
             <Undo2 className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">실행 취소</span>
@@ -414,7 +416,7 @@ export const RoomCanvas = ({
             onClick={onRedo}
             disabled={!canRedo}
             aria-label="다시 실행"
-            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-white/5 dark:text-[#ebe4d6]"
           >
             <Redo2 className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">다시 실행</span>
@@ -424,7 +426,7 @@ export const RoomCanvas = ({
             onClick={onDuplicateSelected}
             disabled={!canDuplicateSelection}
             aria-label="선택 항목 복사"
-            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-white/5 dark:text-[#ebe4d6]"
           >
             <Copy className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">복사</span>
@@ -434,25 +436,25 @@ export const RoomCanvas = ({
             onClick={onDeleteSelected}
             disabled={!hasSelection}
             aria-label="선택 항목 삭제"
-            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm font-medium text-ink-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-white/5 dark:text-[#ebe4d6]"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">삭제</span>
           </button>
-          <div className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-2 py-2">
+          <div className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-2 py-2 dark:border-white/10 dark:bg-white/5">
             <button
               type="button"
               onClick={() => onZoomChange(Math.max(0.7, Number((zoom - 0.1).toFixed(1))))}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-sm font-bold text-ink-700"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-sm font-bold text-ink-700 dark:bg-white/10 dark:text-[#ebe4d6]"
               aria-label="축소"
             >
               <ZoomOut className="h-4 w-4" aria-hidden="true" />
             </button>
-            <span className="w-14 text-center text-sm font-medium text-ink-700">{Math.round(zoom * 100)}%</span>
+            <span className="w-14 text-center text-sm font-medium text-ink-700 dark:text-[#ebe4d6]">{Math.round(zoom * 100)}%</span>
             <button
               type="button"
               onClick={() => onZoomChange(Math.min(1.8, Number((zoom + 0.1).toFixed(1))))}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-sm font-bold text-ink-700"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-ink-100 text-sm font-bold text-ink-700 dark:bg-white/10 dark:text-[#ebe4d6]"
               aria-label="확대"
             >
               <ZoomIn className="h-4 w-4" aria-hidden="true" />
@@ -461,7 +463,7 @@ export const RoomCanvas = ({
         </div>
       </div>
 
-      <div ref={stageRef} className="mt-4 flex-1 overflow-auto rounded-[28px] border border-ink-200 bg-[#f6f5f0] p-3 sm:mt-5 sm:p-6">
+      <div ref={stageRef} className="mt-4 flex-1 overflow-auto rounded-[28px] border border-ink-200 bg-[#f6f5f0] p-3 dark:border-white/10 dark:bg-[#13120f] sm:mt-5 sm:p-6">
         <div className="flex min-h-full min-w-full items-start justify-center">
           <div
             ref={roomRef}
@@ -475,7 +477,7 @@ export const RoomCanvas = ({
             }}
             onClick={() => onSelectItem(null)}
           >
-            <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-ink-500">
+            <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-ink-500 shadow-sm">
               {formatDimension(room.width, room.unit)} × {formatDimension(room.height, room.unit)}
             </div>
 
@@ -561,7 +563,7 @@ export const RoomCanvas = ({
                   key={item.id}
                   role="button"
                   tabIndex={0}
-                  className={`absolute z-10 touch-none rounded-[20px] transition ${
+                  className={`group/furniture absolute z-10 touch-none rounded-[20px] transition ${
                     selected ? "ring-4 ring-accent-300" : "ring-0"
                   } ${hasWarning ? "shadow-[0_0_0_2px_rgba(201,79,79,0.8)]" : "shadow-[0_12px_26px_rgba(39,35,28,0.12)]"}`}
                   style={{
@@ -591,6 +593,26 @@ export const RoomCanvas = ({
                   draggable={false}
                 >
                   <FurnitureShape type={item.type} name={item.name} />
+                  {selected ? (
+                    <div className="absolute -top-14 left-1/2 flex h-14 w-20 -translate-x-1/2 items-start justify-center">
+                      <div className="pointer-events-none absolute top-4 h-5 w-px bg-ink-300" />
+                      <button
+                        type="button"
+                        aria-label={`${item.name} 회전`}
+                        className="absolute top-0 inline-flex h-9 w-9 items-center justify-center rounded-full border border-ink-200 bg-white/95 text-ink-700 opacity-0 shadow-lg transition hover:border-ink-300 hover:text-ink-900 group-hover/furniture:opacity-100 group-focus-within/furniture:opacity-100 dark:border-white/20 dark:bg-[#201d18] dark:text-[#f2e8d5] dark:hover:border-white/40 dark:hover:text-white"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onSelectItem({ type: "furniture", id: item.id });
+                          onRotateFurniture();
+                        }}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                      >
+                        <RotateCw className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-white/80 px-2 py-1 text-[10px] font-medium text-ink-500">
                     {item.x}, {item.y}
                   </div>

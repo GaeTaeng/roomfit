@@ -8,8 +8,11 @@ export type FurnitureType =
   | "dresser"
   | "sofa"
   | "table"
+  | "tv"
   | "fridge"
+  | "dishwasher"
   | "washer"
+  | "robotVacuum"
   | "tvStand"
   | "storage"
   | "custom";
